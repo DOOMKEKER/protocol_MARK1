@@ -81,8 +81,10 @@ void outputHex(int num,std::ofstream &output)
 void print_bin_to_hex( std::ofstream &output)
 {
     int count = BinStr.size();
-    for (int i = 0; i <= count; i+=4){
-        outputHex(convertBinaryToDecimal(stoi(BinStr.substr(i,4))),output); //uffffffff some cake
+    count = count - (count % 4);
+    std::string sliceBinStr = BinStr.substr(0,count);
+    for (int i = 0; i < count; i+=4){
+        outputHex(convertBinaryToDecimal(stoi(sliceBinStr.substr(i,4))),output); //uffffffff some cake
     }
 }
 
