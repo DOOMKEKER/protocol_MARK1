@@ -22,8 +22,8 @@
     _____/____//____/
      0 1 2 3 4 5 6 7
     |1|0|1|1|0|1|1|0|
-    |1|0|1|1|1|0|1|0|
-    |1|0|1|0|1|0|0|0|
+    |1|0|1|1|1|0|0|1| 
+    |1|0|1|0|1|0|1|0|
     |1|0|1|0|1|0|0|0|
     |1|0|1|0|1|0|0|0|
     |0|0|0|0|0|1|0|1| - last packet (coz 00)
@@ -36,8 +36,7 @@ std::string BinStr = "";
 int convertBinaryToDecimal(long long n)
 {
     int decimalNumber = 0, i = 0, remainder;
-    while (n!=0)
-    {
+    while (n!=0){
         remainder = n%10;
         n /= 10;
         decimalNumber += remainder*pow(2,i);
@@ -48,13 +47,11 @@ int convertBinaryToDecimal(long long n)
 
 void outputHex(int num,std::ofstream &output)
 {
-    if(num > 9){
+    if(num < 10){
         output<< num;
     }
-    else
-    {
-         switch (num)
-         {
+    else{
+         switch (num){
          case 10:
              output<< 'A';
              break;
