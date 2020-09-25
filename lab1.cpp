@@ -143,10 +143,10 @@ int read_packets(int num_packet, std::ifstream &input, std::string pckt_buf)
 }
 
 
-void HexToBinTower(string hexdec, std::ofstream &output) //hexdec - исходное hex число из input.txt. Выводит в output.txt по 1 байту в столбик.
+void HexToBinTower(string hexdec, std::ofstream &output) //hexdec - the original hex number from input.txt. Outputs to output.txt (1 byte per column).
 {
 	long int i = 0;
-	string temp; //временная строка, в которую переводится исходное hex в bin в строчку.
+	string temp; //A temporary string to which the original hex is translated into binary in line.
 
 	while (hexdec[i]) {
 
@@ -210,12 +210,12 @@ void HexToBinTower(string hexdec, std::ofstream &output) //hexdec - исходное hex
 		}
 		i++;
 	}
-	//Блок вывода в output.txt длинного bin числа в столбик по 1 байту.
-	int noBlock = temp.length() / 8; //проверка числа байт.
+	//The block of output in output.txt (line-like binary number in a column of 1 byte).
+	int noBlock = temp.length() / 8; //checking the number of bytes.
 	int len = 0;
 	for (int i = 0; i < noBlock; i++)
 	{
-		output << temp.substr(len, 8) << std::endl; //последовательный вывод подстрок из основной строки, которые начинаются на каждом восьмом(считаем от нуля) бите и длинной 8 бит.
+		output << temp.substr(len, 8) << std::endl; //sequential output of substrings from the main string, which begin at every eighth (counting from zero) bit and are 8 bit long.
 		len += 8;
 	}
 
@@ -232,13 +232,13 @@ int main()
 	A8 -> 10101000
     05 -> 00000101
 
-	main функцию взял свою, сам решай куда это впихнуть :)
+	Wrote my own main function. Old one down below.
 	*/
 	std::ifstream input("input.txt");
 	std::ofstream output("output.txt");
 	
 	string number;
-	input >> number; //hex число из input.txt в строку для дальнейшей работы.
+	input >> number; //hex number from input.txt to string for further work.
 
 	HexToBinTower(number, output); 
 
