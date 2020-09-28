@@ -4,8 +4,6 @@
 #include <fstream>
 #include <cmath>
 
-
-
 /*
         How it works
       ______first 2 bit show what type of packet is it ( 11 - header 
@@ -82,7 +80,6 @@ void print_bin_to_hex( std::ofstream &output)
 {
     int count = BinStr.size();
     count = count - (count % 4);
-    //std::string sliceBinStr = BinStr.substr(0,count);
     for (int i = 0; i < count; i+=4){
         outputHex(convertBinaryToDecimal(stoi(BinStr.substr(i,4))),output); //uffffffff some cake
     }
@@ -106,7 +103,6 @@ int read_packets(int num_packet, std::ifstream &input,std::string pckt_buf)
     int count = num_packet;
     std::string pckt;
     std::string payload;
-    
 
     while (count){
 
@@ -135,17 +131,82 @@ int read_packets(int num_packet, std::ifstream &input,std::string pckt_buf)
     }
 
     return -1;
-    
+
+}
+
+std::string fromHex2Bin(int num)
+{
+    std::string msg = "";
+    int k   = 1;
+    int bin = 0;
+    while (num)
+    {
+        bin += (num % 2) * k;
+        k *= 10;
+        num /= 2;
+    }
+
+    msg = std::to_string(bin);
+    if (msg.size() < 4){
+        for(int i = 0; (4 - msg.size() ) > 0; i++){
+            msg = "0" + msg;
+        }
+    }
+    return msg;
+}
+
+void from_input_hex_2_input(std::string &msg_hex)
+{
+    std::ofstream input ("input.txt");
+    for(int i = 0; i < msg_hex.size(); i+=2){
+        int first_4  = msg_hex[i]   - '0';
+        int second_4 = msg_hex[i+1] - '0';
+        std::string body = "";
+
+        int ans1 = first_4  < 10 ? 1:0;
+        int ans2 = second_4 < 10 ? 1:0;
+
+        switch (ans1)
+        {
+        case 1:
+            body = fromHex2Bin(first_4);
+            input << body;
+            break;
+        case 0:
+            first_4 -= 7 ;
+            body = fromHex2Bin(first_4);
+            input << body;
+            break;
+        }
+
+        switch (ans2)
+        {
+        case 1:
+            body = fromHex2Bin(second_4);
+            input << body << std::endl;
+            break;
+        case 0:
+            second_4 -= 7 ;
+            body = fromHex2Bin(second_4);
+            input << body << std::endl;
+            break;
+        }
+
+
+    }
 }
 
 int main()
 {
- 
     int num_packet = 0;
     int operation;
-    std::string msg, msg_buf;
+    std::string msg, msg_buf,msg_hex;
+    std::ifstream input_hex  ("input_hex.txt");
     std::ifstream input  ("input.txt");
     std::ofstream output ("output.txt");
+
+    input_hex >> msg_hex;
+    from_input_hex_2_input(msg_hex);
 
     input >> msg;
     num_packet =  stoi(msg.substr(2,6));
@@ -157,8 +218,5 @@ int main()
     print_bin_to_hex(output);
 
     return 0;
-
-
-
 
 }
