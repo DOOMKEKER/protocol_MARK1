@@ -1,10 +1,11 @@
-
 #include <iostream>
-#include <string>
 #include <fstream>
 #include <cmath>
 
 /*
+16 bit of useful information
+3 bit in one UART payload.
+
         How it works
       ______first 2 bit show what type of packet is it ( 11 - header 
       | |                                                10 - packets in the middle of sending message 
@@ -16,7 +17,7 @@
 
           _____________payload
           |    |
-          |    |__________ xor with payload with payload from other packer (but here will be xor with 000)
+          |    |__________ xor payload with payload from other packer (but here will be xor with 000)
     _____/____//____/
      0 1 2 3 4 5 6 7
     |1|0|1|1|0|1|1|0|
@@ -31,7 +32,7 @@
 
 std::string BinStr = "";
 
-int convertBinaryToDecimal(long long n)
+int convertBinaryToDecimal(long long n) //Binary -> Decimal, 8 byte 
 {
     int decimalNumber = 0, i = 0, remainder;
     while (n!=0){
@@ -43,10 +44,10 @@ int convertBinaryToDecimal(long long n)
     return decimalNumber;
 }
 
-void outputHex(int num,std::ofstream &output)
+void outputHex(int num, std::ofstream &output) //HEX decoder, output to file
 {
     if(num < 10){
-        output<< num;
+             output<< num;
     }
     else{
          switch (num){
@@ -76,19 +77,26 @@ void outputHex(int num,std::ofstream &output)
     
 }
 
-void print_bin_to_hex( std::ofstream &output)
+void print_bin_to_hex( std::ofstream &output ) //convert usefull binary info into hex by byte, output in file
 {
     int count = BinStr.size();
     count = count - (count % 4);
     for (int i = 0; i < count; i+=4){
-        outputHex(convertBinaryToDecimal(stoi(BinStr.substr(i,4))),output); //uffffffff some cake
+        outputHex(convertBinaryToDecimal(stoi(BinStr.substr(i,4))),output); /* substr(i,j)   - output substring, begining from i index and j chars long.
+                                                                               stoi(str,int) - convert string to int.
+
+                                                                            */
     }
 }
 
 
 bool pckt_check( std::string pckt_buf, std::string pckt )
 {
-            if ( (pckt[5] - '0') !=  (pckt_buf[2] - '0' ) ^ (pckt[2] - '0')   )
+            if ( (pckt[5] - '0') !=  (pckt_buf[2] - '0' ) ^ (pckt[2] - '0')   ) /*XOR check.
+                                                                                  char to int by ASCII table. 
+				                                                                  ASCII "0" = 48, "1" = 49. pckt[i] will be always 0 or 1. 
+				                                                                  0(48 in ASCII) - 0(48 in ASCII) = 0; 1(49 ASCII) - 0(48 ASCII) = 1;
+				                                                                  0=0 / 1=1*/
                 return false;
             if ( (pckt[6] - '0') !=  (pckt_buf[3] - '0' ) ^ (pckt[3] - '0')   )
                 return false;
@@ -98,43 +106,42 @@ bool pckt_check( std::string pckt_buf, std::string pckt )
 }
 
 
-int read_packets(int num_packet, std::ifstream &input,std::string pckt_buf)
+int read_packets(int num_packet, std::ifstream &input, std::string pckt_buf) //reading binary packets from input.txt 
 {
-    int count = num_packet;
+    int count = num_packet; //read in desc (pckt[2]...pckt[7])
     std::string pckt;
     std::string payload;
 
     while (count){
 
-        input >> pckt;
+        input >> pckt;//file->string
         
-        if (input.eof())
+        if (input.eof()) //if file read error -> return -1
            return -1;
 
-        if ( ( count != 1 ) && ( pckt[0] == '1' ) && ( pckt[1] == '0' )){
-            if(!pckt_check(pckt_buf,pckt))
+        if ( ( count != 1 ) && ( pckt[0] == '1' ) && ( pckt[1] == '0' )){ //if info in middle of payload 
+            if(!pckt_check(pckt_buf,pckt)) //xor check
                 return -2;
-            BinStr = BinStr + pckt.substr(2,3);
+            BinStr = BinStr + pckt.substr(2,3); //usefull information -> BinStr
             pckt_buf = pckt;
             count--;
             continue;
         }
 
-        if ( ( count == 1 ) && (pckt[0] == '0' ) && (pckt[1] == '0' ) ){
-            if(!pckt_check(pckt_buf,pckt))
+        if ( ( count == 1 ) && (pckt[0] == '0' ) && (pckt[1] == '0' ) ){ //if info in the end of payload
+            if(!pckt_check(pckt_buf,pckt)) 
                 return -2;
-            BinStr = BinStr + pckt.substr(2,3);
+            BinStr = BinStr + pckt.substr(2,3); 
             return 0;
         }
 
         return -2;
     }
 
-    return -1;
-
+    return -1; //if there is no last packet
 }
 
-std::string fromHex2Bin(int num)
+std::string fromHex2Bin(int num) //hex -> binary
 {
     std::string msg = "";
     int k   = 1;
@@ -146,8 +153,8 @@ std::string fromHex2Bin(int num)
         num /= 2;
     }
 
-    msg = std::to_string(bin);
-    if (msg.size() < 4){
+    msg = std::to_string(bin); //int to string
+    if (msg.size() < 4){      //Checking the count of bits at the begining. If count is less than 4 - adds zer0es at the begining.
         for(int i = 0; (4 - msg.size() ) > 0; i++){
             msg = "0" + msg;
         }
@@ -155,16 +162,16 @@ std::string fromHex2Bin(int num)
     return msg;
 }
 
-void from_input_hex_2_input(std::string &msg_hex)
+void from_input_hex_2_input(std::string &msg_hex) //hex to binary tower
 {
     std::ofstream input ("input.txt");
     for(int i = 0; i < msg_hex.size(); i+=2){
-        int first_4  = msg_hex[i]   - '0';
-        int second_4 = msg_hex[i+1] - '0';
+        int first_4  = msg_hex[i]   - '0'; // char to int by ASCII ( read about it from above (line 95) )
+        int second_4 = msg_hex[i+1] - '0'; 
         std::string body = "";
 
-        int ans1 = first_4  < 10 ? 1:0;
-        int ans2 = second_4 < 10 ? 1:0;
+        int ans1 = first_4  < 10 ? 1:0; //check variable if its number or letter.
+        int ans2 = second_4 < 10 ? 1:0; 
 
         switch (ans1)
         {
@@ -173,7 +180,7 @@ void from_input_hex_2_input(std::string &msg_hex)
             input << body;
             break;
         case 0:
-            first_4 -= 7 ;
+            first_4 -= 7 ;  
             body = fromHex2Bin(first_4);
             input << body;
             break;
@@ -191,30 +198,38 @@ void from_input_hex_2_input(std::string &msg_hex)
             input << body << std::endl;
             break;
         }
-
-
     }
 }
+
 
 int main()
 {
     int num_packet = 0;
     int operation;
     std::string msg, msg_buf,msg_hex;
-    std::ifstream input_hex  ("input_hex.txt");
-    std::ifstream input  ("input.txt");
-    std::ofstream output ("output.txt");
+    std::ifstream input_hex  ("input_hex.txt"); //original hex number (OHN)
+    std::ifstream input  ("input.txt");         // binary tower (converted OHN)
+    std::ofstream output ("output.txt");        //output hex number
 
     input_hex >> msg_hex;
     from_input_hex_2_input(msg_hex);
 
     input >> msg;
-    num_packet =  stoi(msg.substr(2,6));
-    num_packet = convertBinaryToDecimal(num_packet);
+    num_packet =  stoi(msg.substr(2,6)); //number of packets, that will be sent
+    num_packet = convertBinaryToDecimal(num_packet); 
 
-    if (msg[0] == '1' && msg[1] == '1')
-        read_packets(num_packet,input,msg);
-
+	int kek;
+	if (msg[0] == '1' && msg[1] == '1') //if header
+	{
+		kek = read_packets(num_packet, input, msg);
+		if (kek != 0)
+		{
+			std::cout << "CHECK YOUR input_hex, mate!" << std::endl;
+			return -1;
+		}
+        else std::cout << "Alright, delo sdelano!" << std::endl;
+	}
+    
     print_bin_to_hex(output);
 
     return 0;
